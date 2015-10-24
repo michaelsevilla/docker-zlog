@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+if [ -z "$GIT_URL"] ; then
+  GIT_URL="https://github.com/noahdesu/ceph.git"
+fi
+
+
+# don't let the user define the commit
+if [ ! -d /ceph/.git ] ; then
+  cd /
+  git clone --recursive $GIT_URL
+  cd /ceph
+  git checkout -b cls_zlog remotes/origin/cls_zlog
+fi
+
+# make sure we have the dir the houses the custom obj interfaces for OSDs
+
+
+cd /ceph
+git clean -fd
+git submodule update --init --recursive
+
+./autogen.sh
+./configure
+cd src
+
+# build source code if /zlog folder exists; don't enable multithread because it builds quickly
+exec make libcls_zlog.la
+exec make libcls_zlog_client.la
