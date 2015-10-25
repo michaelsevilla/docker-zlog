@@ -17,7 +17,7 @@ RUN yum install -y \
     chmod 755 install-deps.sh && \
     ./install-deps.sh
 
-# override tutum's run.sh with our own
+# kickoff the build process when the build starts
 ADD build /
 RUN chmod 755 /build
 ENTRYPOINT ["/build"]
