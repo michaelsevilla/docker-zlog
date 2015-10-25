@@ -12,7 +12,7 @@ Build zlog:
 
     docker run \
         -v /tmp/docker/zlog:/ceph \
-        zlogdev-build
+        michaelsevilla/zlogdev-build
 
 Load the executables into the OSD interfaces:
 
