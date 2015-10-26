@@ -15,13 +15,29 @@ if [ ! -d /ceph/.git ] ; then
   git checkout -b cls_zlog remotes/origin/cls_zlog
 fi
 
-cd /ceph
-git clean -fd
-git submodule update --init --recursive
-./autogen.sh
-./configure
-cd src
+if [ ! -e /ceph/src/.libs/libcls_zlog.so.1 ]; then
+  cd /ceph
+  git clean -fd
+  git submodule update --init --recursive
+  ./autogen.sh
+  ./configure
+  cd src
 
-# build source code if /zlog folder exists; don't enable multithread because it builds quickly
-exec make libcls_zlog.la
-exec make libcls_zlog_client.la
+  #don't enable multithread because it builds quickly
+  make libcls_zlog.la
+  make libcls_zlog_client.la
+fi
+
+
+# install cls_zlog
+if [ ! -d /zlog/.git ] ; then
+  cd /
+  git clone https://github.com/noahdesu/zlog.git
+fi
+
+cd /zlog
+autoreconf -ivf
+mkdir -p /tmp/install/rados
+cp /ceph/src/cls/zlog/cls_zlog_client.h /tmp/install/rados
+CPPFLAGS=-I/tmp/install LDFLAGS=-L/ceph/src/.libs ./configure
+make
