@@ -21,7 +21,8 @@ RUN mkdir /src && cd /src && \
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     cd /src/ceph && \
     ./install-deps.sh && \
-    make clean && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apt-get install -y protobuf-compiler libprotobuf-dev librados2 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # compile OSD interfaces
 RUN cd /src/ceph && \
@@ -35,10 +36,12 @@ RUN cd /src/ceph && \
 
 # compile client interfaces
 RUN cd /src/zlog && \
-    autoreconf -ivh && \
+    autoreconf -ivf && \
     mkdir -p /tmp/install/rados && \
     cp /src/ceph/src/cls/zlog/cls_zlog_client.h /tmp/install/rados && \
-    CPPFLAGS=-I/tmp/install LDFLAGS=-L/tmp/ceph/src/.libs ./configure && \
+    cd /src/zlog && \
+    CPPFLAGS=-I/tmp/install LDFLAGS=-L/src/ceph/src/.libs ./configure && \
+    cd /src/zlog && \
     make
 
 # Add bootstrap script
