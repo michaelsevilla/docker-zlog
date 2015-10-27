@@ -137,8 +137,14 @@ ceph-mds ${CEPH_OPTS} -i 0
 ceph-rest-api ${CEPH_OPTS} -n client.admin &
 
 
+#######
+# ZLOG#
+#######
+
+/src/zlog/src/zlog-seqr --port 5678 --daemon
+
+
 #########
 # WATCH #
 #########
-
 exec ceph ${CEPH_OPTS} -w

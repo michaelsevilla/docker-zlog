@@ -1,39 +1,34 @@
-Wraps a given zlog codebase in a container. It pulls the code and puts it into /ceph in the container (if it isn't already there). Then it builds the the zlog OSD libraries against the ceph source tree. The user should then attach the directory to the ceph/demo container, run it, and copy the zlog executables to the OSD interfaces directory. 
+Wraps a given zlog codebase in a container. When launched, it brings up Ceph with zlog. We also use the same image for the client by changing the entrypoint. The technical steps for this image are:
 
-1. pulls the ceph source and checks out the zlog branch
+1. installs the ceph master branch
 
-2. builds the zlog OSD libraries against that source tree
+2. pulls zlog ceph tree and the zlog source
 
-3. pulls the zlog client source 
+2. builds zlog OSD libraries against the zlog ceph tree
 
-4. builds the zlog 
+4. builds zlog servers and clients
+
+5. adds zlog object interface plugins to the OSDs
 
 ===================================================
 Quickstart
 ===================================================
 
-Build the container: 
+Build zlog, launch Ceph with zlog, start a sequencer:
 
-    docker build -t zlog .
-
-Build zlog: 
-
-    docker run \
-        -v /tmp/docker/zlog:/ceph \
-        michaelsevilla/zlogdev-build
-
-Load the executables into the OSD interfaces:
-
-    docker run -it \
-        --name=ceph \
-        -v /etc/ceph:/etc/ceph \
-        -v /tmp/docker/zlog:/zlog \
+    docker run -d \
+        --name=zlogdev-build \
+        --net=host \
+        --volume=/etc/ceph:/etc/ceph \
         -e CEPH_NETWORK=127.0.0.1/24 \
         -e MON_IP=127.0.0.1 \
+        michaelsevilla/zlogdev-build
+    
+Run the zlog tests:
+
+    docker run --rm \
+        --name=zlog-client \
         --net=host \
-        --privileged \
-        ceph/demo
-    docker exec ceph cp \
-        /zlog/src/.libs/libcls_zlog.so* \
-        /usr/lib/rados-classes/
-    docker restart ceph
+        --volume /etc/ceph:/etc/ceph \
+        --entrypoint=/src/zlog/src/test \
+        michaelsevilla/zlogdev-build
