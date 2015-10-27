@@ -1,23 +1,55 @@
-FROM ceph/base:centos
+FROM ubuntu:14.04
 
-MAINTAINER Michael Sevilla <mikesevilla3@gmail.com>
+MAINTAINER Noah Watkins <noahwatkins@gmail.com>
 
+RUN apt-get update && apt-get install -y git wget
+
+# install ceph master development branch
+RUN wget -q -O- 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc' | sudo apt-key add - && \
+    echo deb http://gitbuilder.ceph.com/ceph-deb-$(lsb_release -sc)-x86_64-basic/ref/master $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list && \
+    apt-get update && apt-get install -y --force-yes ceph librados-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# get the code
+RUN mkdir /src && cd /src && \
+    git clone --recursive https://github.com/noahdesu/ceph.git && \
+    git clone https://github.com/noahdesu/zlog.git && \
+    cd ceph && \
+    git checkout -b cls_zlog origin/cls_zlog
+    
 # install deps
-RUN yum install -y \
-        wget \
-        git \
-        boost-devel \
-        protobuf-compiler \
-        protobuf-devel \
-        librados2 \
-        libtoolize \
-        ceph-devel && \
-    wget https://raw.githubusercontent.com/noahdesu/ceph/master/install-deps.sh && \
-    wget https://raw.githubusercontent.com/noahdesu/ceph/master/ceph.spec.in && \
-    chmod 755 install-deps.sh && \
-    ./install-deps.sh
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    cd /src/ceph && \
+    ./install-deps.sh && \
+    make clean && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# kickoff the build process when the build starts
-ADD build /
-RUN chmod 755 /build
-ENTRYPOINT ["/build"]
+# compile OSD interfaces
+RUN cd /src/ceph && \
+    ./autogen.sh && \
+    ./configure && \
+    cd src && \
+    make libcls_zlog.la && \
+    make libcls_zlog_client.la && \
+    cp .libs/libcls_zlog.so* /usr/lib/rados-classes/ && \
+    cp cls/zlog/cls_zlog_client.h /usr/include/rados/
+
+# compile client interfaces
+RUN cd /src/zlog && \
+    autoreconf -ivh && \
+    mkdir -p /tmp/install/rados && \
+    cp /src/ceph/src/cls/zlog/cls_zlog_client.h /tmp/install/rados && \
+    CPPFLAGS=-I/tmp/install LDFLAGS=-L/tmp/ceph/src/.libs ./configure && \
+    make
+
+# Add bootstrap script
+ADD entrypoint.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+
+# Add volumes for Ceph config and data
+VOLUME ["/etc/ceph","/var/lib/ceph"]
+
+# Expose the Ceph ports
+EXPOSE 6789 6800 6801 6802 6803 6804 6805 80 5000
+
+# Execute the entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
