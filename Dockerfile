@@ -45,15 +45,14 @@ RUN cd /src/zlog && \
     make && \
     find /src/zlog/src/ -perm /a+x -exec cp {} /bin/ \;
 
-
-# Add bootstrap script
-ADD single-node-ceph.sh /bin/single-node-ceph.sh
-RUN /bin/chmod -R 755 /bin/*
-ENV PATH /bin
-
 # Add volumes for Ceph config and data
 VOLUME ["/etc/ceph","/var/lib/ceph"]
 
 # Expose the Ceph ports
-EXPOSE 6789 6800 6801 6802 6803 6804 6805 80 5000
+EXPOSE 6789 6800 6801 6802 6803 6804 6805 80 5000 5678
 
+# Add bootstrap script
+ADD entrypoint.sh /entrypoint.sh
+RUN /bin/chmod -R 755 /bin/*
+ENV PATH /bin
+ENTRYPOINT ["/entrypoint.sh"]

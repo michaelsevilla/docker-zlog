@@ -1,13 +1,9 @@
 Wraps a given zlog codebase in a container. When launched, it brings up Ceph with zlog. We also use the same image for the client by changing the entrypoint. The technical steps for this image are:
 
 1. installs the ceph master branch
-
 2. pulls zlog ceph tree and the zlog source
-
 2. builds zlog OSD libraries against the zlog ceph tree
-
 4. builds zlog servers and clients
-
 5. adds zlog object interface plugins to the OSDs
 
 ===================================================
