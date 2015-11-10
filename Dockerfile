@@ -53,6 +53,5 @@ EXPOSE 6789 6800 6801 6802 6803 6804 6805 80 5000 5678
 
 # Add bootstrap script
 ADD entrypoint.sh /entrypoint.sh
-RUN /bin/chmod -R 755 /bin/*
-ENV PATH /bin
+RUN chmod 755 /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
