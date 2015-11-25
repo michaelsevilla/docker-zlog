@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM tutum/ubuntu:trusty
 
 MAINTAINER Noah Watkins <noahwatkins@gmail.com>
 
@@ -52,6 +52,6 @@ VOLUME ["/etc/ceph","/var/lib/ceph"]
 EXPOSE 6789 6800 6801 6802 6803 6804 6805 80 5000 5678
 
 # Add bootstrap script
-ADD entrypoint.sh /entrypoint.sh
+ADD entrypoint.sh /
 RUN chmod 755 /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
