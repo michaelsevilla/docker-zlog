@@ -1,6 +1,6 @@
 FROM tutum/ubuntu:trusty
 
-MAINTAINER Noah Watkins <noahwatkins@gmail.com>
+MAINTAINER Michael Sevilla <mikesevilla3@gmail.com>
 
 RUN apt-get update && apt-get install -y git wget
 
